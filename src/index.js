@@ -1,5 +1,6 @@
 const Elm = require('./elm-app/app.elmproj')
+const ReactApp = require('./react-app/src/index.js')
 
 window.Elm = Elm
 
-console.log('fooa')
+window.ReactApp = ReactApp

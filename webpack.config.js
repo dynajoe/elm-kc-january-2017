@@ -29,6 +29,10 @@ module.exports = {
             'elm-hot',
             'elm-webpack-project'
          ],
+      }, {
+         test: /.js$/,
+         exclude: /(node_modules|\.min\.|elm-stuff)/,
+         loader: 'babel',
       }],
 
       noParse: /\.elmproj$/,

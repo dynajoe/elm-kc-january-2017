@@ -9,6 +9,11 @@
   "license": "BSD",
   "description": "ERROR: No README.md file found!",
   "dependencies": {
+    "babel-core": "6.14.0",
+    "babel-eslint": "6.1.2",
+    "babel-jest": "15.0.0",
+    "babel-loader": "6.2.5",
+    "babel-preset-react-app": "^0.2.1",
     "elm-hot-loader": "^0.5.4",
     "elm-webpack-loader": "^4.2.0",
     "elm-webpack-project-loader": "^2.2.0",

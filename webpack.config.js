@@ -32,7 +32,7 @@ module.exports = {
       }, {
          test: /.js$/,
          exclude: /(node_modules|\.min\.|elm-stuff)/,
-         loader: 'babel',
+         loaders: ['react-hot', 'babel'],
       }],
 
       noParse: /\.elmproj$/,

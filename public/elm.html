@@ -4,13 +4,22 @@
 <head>
   <meta charset="utf-8">
   <title>Elm App</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
   <div id="elm-root"></div>
   <script src="main.js"></script>
   <script>
-    Elm.App.Main.embed(document.getElementById('elm-root'))
+    var storedState = localStorage.getItem('elm-todo-save');
+
+    var startingState = storedState ? JSON.parse(storedState) : null;
+
+    var todomvc = Elm.App.embed(document.getElementById('elm-root'), startingState);
+
+    todomvc.ports.setStorage.subscribe(function(state) {
+        localStorage.setItem('elm-todo-save', JSON.stringify(state));
+    });
   </script>
 </body>
 </html>

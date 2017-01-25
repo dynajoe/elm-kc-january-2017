@@ -1,4 +1,4 @@
-port module App exposing (..)
+module App exposing (..)
 
 import Dom
 import Html exposing (..)
@@ -6,47 +6,36 @@ import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Html.Keyed as Keyed
 import Html.Lazy exposing (lazy, lazy2)
-import Json.Decode as Json
+import Json.Decode as Decode
 import String
 import Task
+import RemoteData exposing (..)
+import Http
+import Date exposing (Date)
+import Json.Decode.Extra as DecodeExtra exposing ((|:))
 
-main : Program (Maybe Model) Model Msg
+
+main : Program Never Model Msg
 main =
-    Html.programWithFlags
+    Html.program
         { init = init
         , view = view
-        , update = updateWithStorage
+        , update = update
         , subscriptions = \_ -> Sub.none
         }
 
 
-port setStorage : Model -> Cmd msg
-
-
-{-| We want to `setStorage` on every update. This function adds the setStorage
-command for every step of the update function.
--}
-updateWithStorage : Msg -> Model -> ( Model, Cmd Msg )
-updateWithStorage msg model =
-    let
-        ( newModel, cmds ) =
-            update msg model
-    in
-        ( newModel
-        , Cmd.batch [ setStorage newModel, cmds ]
-        )
-
-
 
 -- MODEL
-
-
 -- The full application state of our todo app.
+
+
 type alias Model =
     { entries : List Entry
     , field : String
     , uid : Int
     , visibility : String
+    , todos : RemoteData.WebData (List Todo)
     }
 
 
@@ -64,6 +53,7 @@ emptyModel =
     , visibility = "All"
     , field = ""
     , uid = 0
+    , todos = RemoteData.NotAsked
     }
 
 
@@ -76,9 +66,9 @@ newEntry desc id =
     }
 
 
-init : Maybe Model -> ( Model, Cmd Msg )
-init savedModel =
-    Maybe.withDefault emptyModel savedModel ! []
+init : ( Model, Cmd Msg )
+init =
+    emptyModel ! [ getTodoList ]
 
 
 
@@ -99,14 +89,42 @@ type Msg
     | DeleteComplete
     | Check Int Bool
     | CheckAll Bool
+    | TodosResponse (WebData (List Todo))
     | ChangeVisibility String
+
+
+type alias Todo =
+    { todoText : String
+    , createdOn : Date
+    }
+
+
+decodeTodos : Decode.Decoder (List Todo)
+decodeTodos =
+    Decode.list <|
+        Decode.succeed
+            Todo
+            |: (Decode.field "text" Decode.string)
+            |: (Decode.field "created_on" DecodeExtra.date)
+
+
+getTodoList : Cmd Msg
+getTodoList =
+    Http.get "/todos" decodeTodos
+        |> RemoteData.sendRequest
+        |> Cmd.map TodosResponse
 
 
 
 -- How we update our Model on a given Msg?
+
+
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
+        TodosResponse response ->
+            model ! []
+
         NoOp ->
             model ! []
 
@@ -226,11 +244,11 @@ onEnter msg =
     let
         isEnter code =
             if code == 13 then
-                Json.succeed msg
+                Decode.succeed msg
             else
-                Json.fail "not ENTER"
+                Decode.fail "not ENTER"
     in
-        on "keydown" (Json.andThen isEnter keyCode)
+        on "keydown" (Decode.andThen isEnter keyCode)
 
 
 

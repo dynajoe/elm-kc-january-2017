@@ -464,7 +464,7 @@ viewControlsFilters visibility =
     let
         visibilitySwap uri visibility actualVisibility =
             li
-                [ onClick (ChangeVisibility visibility) ]
+                [ onClick <| ChangeVisibility visibility ]
                 [ a [ href uri, classList [ ( "selected", visibility == actualVisibility ) ] ]
                     [ text (toString visibility) ]
                 ]

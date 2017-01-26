@@ -179,13 +179,13 @@ update msg model =
         TodosResponse response ->
             case response of
                 RemoteData.Success todos ->
-                    { model | entries = List.map newEntry todos } ! []
+                    ( { model | entries = List.map newEntry todos }, Cmd.none )
 
                 RemoteData.Failure error ->
                     Debug.crash (toString error)
 
                 _ ->
-                    model ! []
+                    ( model, Cmd.none )
 
         SaveTodoResponse response ->
             case response of
@@ -206,22 +206,22 @@ update msg model =
                             else
                                 []
                     in
-                        { model | entries = maybeNewHead ++ updateExisting } ! []
+                        ( { model | entries = maybeNewHead ++ updateExisting }, Cmd.none )
 
                 Result.Err error ->
                     Debug.crash (toString error)
 
         DeleteTodoResponse response ->
-            model ! []
+            ( model, Cmd.none )
 
         NoOp ->
-            model ! []
+            ( model, Cmd.none )
 
         Add ->
-            { model | field = "" } ! [ createTodo model.field ]
+            ( { model | field = "" }, createTodo model.field )
 
         UpdateField str ->
-            { model | field = str } ! []
+            ( { model | field = str }, Cmd.none )
 
         EditingEntry todo isEditing ->
             let
@@ -234,32 +234,32 @@ update msg model =
                 focus =
                     Dom.focus ("todo-" ++ toString id)
             in
-                { model | entries = List.map updateEntry model.entries }
-                    ! [ Task.attempt (\_ -> NoOp) focus ]
+                ( { model | entries = List.map updateEntry model.entries }, Task.attempt (\_ -> NoOp) focus )
 
         UpdateEntry todo newText ->
-            model ! [ updateTodo { todo | todoText = newText } ]
+            ( model, updateTodo { todo | todoText = newText } )
 
         Delete todo ->
-            { model | entries = List.filter (\t -> t.todo.todoId /= todo.todoId) model.entries } ! [ deleteTodo todo ]
+            ( { model | entries = List.filter (\t -> t.todo.todoId /= todo.todoId) model.entries }, deleteTodo todo )
 
         DeleteComplete ->
-            { model | entries = List.filter (not << .completed << .todo) model.entries }
-                ! []
+            ( { model | entries = List.filter (not << .completed << .todo) model.entries }, Cmd.none )
 
         Check todo isCompleted ->
-            model ! [ updateTodo { todo | completed = isCompleted } ]
+            ( model, updateTodo { todo | completed = isCompleted } )
 
         CheckAll isCompleted ->
             let
-                updateEntry t =
-                    updateTodo { t | completed = isCompleted }
+                updateEntry entry =
+                    updateTodo { entry | completed = isCompleted }
+
+                updateCommands =
+                    List.map (updateEntry << .todo) model.entries
             in
-                model ! List.map (updateEntry << .todo) model.entries
+                ( model, Cmd.batch updateCommands )
 
         ChangeVisibility visibility ->
-            { model | visibility = visibility }
-                ! []
+            ( { model | visibility = visibility }, Cmd.none )
 
 
 

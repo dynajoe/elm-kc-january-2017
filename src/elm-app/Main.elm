@@ -26,7 +26,6 @@ main =
 
 
 -- MODEL
--- The full application state of our todo app.
 
 
 type alias Model =
@@ -48,8 +47,16 @@ type Visibility
     | Completed
 
 
-emptyModel : Model
-emptyModel =
+type alias Todo =
+    { todoId : Int
+    , todoText : String
+    , completed : Bool
+    , createdOn : Date
+    }
+
+
+initialModel : Model
+initialModel =
     { entries = []
     , visibility = All
     , field = ""
@@ -65,39 +72,11 @@ newEntry todo =
 
 init : ( Model, Cmd Msg )
 init =
-    emptyModel ! [ getTodoList ]
+    ( initialModel, getTodoList )
 
 
 
--- UPDATE
-
-
-{-| Users of our app can trigger messages by clicking and typing. These
-messages are fed into the `update` function as they occur, letting us react
-to them.
--}
-type Msg
-    = NoOp
-    | UpdateField String
-    | EditingEntry Todo Bool
-    | UpdateEntry Todo String
-    | Add
-    | Delete Todo
-    | DeleteComplete
-    | Check Todo Bool
-    | CheckAll Bool
-    | TodosResponse (WebData (List Todo))
-    | SaveTodoResponse (Result Http.Error Todo)
-    | DeleteTodoResponse Int (Result Http.Error ())
-    | ChangeVisibility Visibility
-
-
-type alias Todo =
-    { todoId : Int
-    , todoText : String
-    , completed : Bool
-    , createdOn : Date
-    }
+-- HTTP
 
 
 decodeTodo : Decode.Decoder Todo
@@ -171,7 +150,23 @@ createTodo text =
 
 
 
--- How we update our Model on a given Msg?
+-- UPDATE
+
+
+type Msg
+    = NoOp
+    | UpdateField String
+    | EditingEntry Todo Bool
+    | UpdateEntry Todo String
+    | Add
+    | Delete Todo
+    | DeleteComplete
+    | Check Todo Bool
+    | CheckAll Bool
+    | TodosResponse (WebData (List Todo))
+    | SaveTodoResponse (Result Http.Error Todo)
+    | DeleteTodoResponse Int (Result Http.Error ())
+    | ChangeVisibility Visibility
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )

@@ -11,9 +11,11 @@ class App extends Component {
    }
 
    render() {
-      return (<div>
-        <Header addTodo={this.props.actions.addTodo} />
-        <MainSection todos={this.props.todos} actions={this.props.actions} />
+      return (<div className="todomvc-wrapper">
+         <section className="todoapp">
+            <Header addTodo={this.props.actions.addTodo} />
+            <MainSection todos={this.props.todos} actions={this.props.actions} />
+         </section>
       </div>)
    }
 }

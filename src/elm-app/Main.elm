@@ -286,7 +286,7 @@ viewInput : String -> Html Msg
 viewInput task =
     header
         [ class "header" ]
-        [ h1 [] [ text "todos" ]
+        [ h1 [] [ text "Elm todos" ]
         , input
             [ class "new-todo"
             , placeholder "What needs to be done?"
@@ -429,16 +429,21 @@ viewControls visibility entries =
 viewControlsCount : Int -> Html Msg
 viewControlsCount entriesLeft =
     let
-        item_ =
-            if entriesLeft == 1 then
-                " item"
-            else
-                " items"
+        ( countLabel, description ) =
+            case entriesLeft of
+                1 ->
+                    ( "1", " item left" )
+
+                0 ->
+                    ( "No", " items left" )
+
+                _ ->
+                    ( toString entriesLeft, " items left" )
     in
         span
             [ class "todo-count" ]
-            [ strong [] [ text (toString entriesLeft) ]
-            , text (item_ ++ " left")
+            [ strong [] [ text countLabel ]
+            , text description
             ]
 
 
@@ -470,7 +475,7 @@ viewControlsClear entriesCompleted =
         , hidden (entriesCompleted == 0)
         , onClick DeleteComplete
         ]
-        [ text ("Clear completed (" ++ toString entriesCompleted ++ ")")
+        [ text "Clear completed"
         ]
 
 

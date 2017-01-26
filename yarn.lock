@@ -155,6 +155,12 @@ aws4@^1.2.1:
   version "1.5.0"
   resolved "https://registry.yarnpkg.com/aws4/-/aws4-1.5.0.tgz#0a29ffb79c31c9e712eeb087e8e7a64b4a56d755"
 
+axios@^0.15.3:
+  version "0.15.3"
+  resolved "https://registry.yarnpkg.com/axios/-/axios-0.15.3.tgz#2c9d638b2e191a08ea1d6cc988eadd6ba5bdc053"
+  dependencies:
+    follow-redirects "1.0.0"
+
 babel-cli@6.14.0:
   version "6.14.0"
   resolved "https://registry.yarnpkg.com/babel-cli/-/babel-cli-6.14.0.tgz#cbc778ad1ff4e58c87b87d7e08993993c2d3b75f"
@@ -780,33 +786,19 @@ babel-plugin-transform-react-display-name@^6.3.13:
   dependencies:
     babel-runtime "^6.22.0"
 
-babel-plugin-transform-react-jsx-self@6.11.0:
+babel-plugin-transform-react-jsx-self@6.11.0, babel-plugin-transform-react-jsx-self@^6.11.0:
   version "6.11.0"
   resolved "https://registry.yarnpkg.com/babel-plugin-transform-react-jsx-self/-/babel-plugin-transform-react-jsx-self-6.11.0.tgz#605c9450c1429f97a930f7e1dfe3f0d9d0dbd0f4"
   dependencies:
     babel-plugin-syntax-jsx "^6.8.0"
     babel-runtime "^6.9.0"
 
-babel-plugin-transform-react-jsx-self@^6.11.0:
-  version "6.22.0"
-  resolved "https://registry.yarnpkg.com/babel-plugin-transform-react-jsx-self/-/babel-plugin-transform-react-jsx-self-6.22.0.tgz#df6d80a9da2612a121e6ddd7558bcbecf06e636e"
-  dependencies:
-    babel-plugin-syntax-jsx "^6.8.0"
-    babel-runtime "^6.22.0"
-
-babel-plugin-transform-react-jsx-source@6.9.0:
+babel-plugin-transform-react-jsx-source@6.9.0, babel-plugin-transform-react-jsx-source@^6.3.13:
   version "6.9.0"
   resolved "https://registry.yarnpkg.com/babel-plugin-transform-react-jsx-source/-/babel-plugin-transform-react-jsx-source-6.9.0.tgz#af684a05c2067a86e0957d4f343295ccf5dccf00"
   dependencies:
     babel-plugin-syntax-jsx "^6.8.0"
     babel-runtime "^6.9.0"
-
-babel-plugin-transform-react-jsx-source@^6.3.13:
-  version "6.22.0"
-  resolved "https://registry.yarnpkg.com/babel-plugin-transform-react-jsx-source/-/babel-plugin-transform-react-jsx-source-6.22.0.tgz#66ac12153f5cd2d17b3c19268f4bf0197f44ecd6"
-  dependencies:
-    babel-plugin-syntax-jsx "^6.8.0"
-    babel-runtime "^6.22.0"
 
 babel-plugin-transform-react-jsx@^6.3.13:
   version "6.22.0"
@@ -816,7 +808,7 @@ babel-plugin-transform-react-jsx@^6.3.13:
     babel-plugin-syntax-jsx "^6.8.0"
     babel-runtime "^6.22.0"
 
-babel-plugin-transform-regenerator@6.14.0:
+babel-plugin-transform-regenerator@6.14.0, babel-plugin-transform-regenerator@^6.14.0:
   version "6.14.0"
   resolved "https://registry.yarnpkg.com/babel-plugin-transform-regenerator/-/babel-plugin-transform-regenerator-6.14.0.tgz#119119b20c8b4283f6c77f0170d404c3c654bec8"
   dependencies:
@@ -829,12 +821,6 @@ babel-plugin-transform-regenerator@6.14.0:
     babel-types "^6.14.0"
     babylon "^6.9.0"
     private "~0.1.5"
-
-babel-plugin-transform-regenerator@^6.14.0:
-  version "6.22.0"
-  resolved "https://registry.yarnpkg.com/babel-plugin-transform-regenerator/-/babel-plugin-transform-regenerator-6.22.0.tgz#65740593a319c44522157538d690b84094617ea6"
-  dependencies:
-    regenerator-transform "0.9.8"
 
 babel-plugin-transform-runtime@6.12.0:
   version "6.12.0"
@@ -1009,7 +995,7 @@ babel-runtime@6.11.6:
     core-js "^2.4.0"
     regenerator-runtime "^0.9.5"
 
-babel-runtime@^6.0.0, babel-runtime@^6.18.0, babel-runtime@^6.22.0, babel-runtime@^6.9.0, babel-runtime@^6.9.1:
+babel-runtime@^6.0.0, babel-runtime@^6.22.0, babel-runtime@^6.9.0, babel-runtime@^6.9.1:
   version "6.22.0"
   resolved "https://registry.yarnpkg.com/babel-runtime/-/babel-runtime-6.22.0.tgz#1cf8b4ac67c77a4ddb0db2ae1f74de52ac4ca611"
   dependencies:
@@ -1040,7 +1026,7 @@ babel-traverse@^6.0.20, babel-traverse@^6.14.0, babel-traverse@^6.18.0, babel-tr
     invariant "^2.2.0"
     lodash "^4.2.0"
 
-babel-types@^6.0.19, babel-types@^6.14.0, babel-types@^6.18.0, babel-types@^6.19.0, babel-types@^6.22.0:
+babel-types@^6.0.19, babel-types@^6.14.0, babel-types@^6.18.0, babel-types@^6.22.0:
   version "6.22.0"
   resolved "https://registry.yarnpkg.com/babel-types/-/babel-types-6.22.0.tgz#2a447e8d0ea25d2512409e4175479fd78cc8b1db"
   dependencies:
@@ -1644,6 +1630,12 @@ find-versions@^1.0.0:
 firstline@1.2.0:
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/firstline/-/firstline-1.2.0.tgz#c9f4886e7f7fbf0afc12d71941dce06b192aea05"
+
+follow-redirects@1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/follow-redirects/-/follow-redirects-1.0.0.tgz#8e34298cbd2e176f254effec75a1c78cc849fd37"
+  dependencies:
+    debug "^2.2.0"
 
 for-in@^0.1.3, for-in@^0.1.5:
   version "0.1.6"
@@ -2969,6 +2961,10 @@ redent@^1.0.0:
     indent-string "^2.1.0"
     strip-indent "^1.0.1"
 
+redux-thunk@^2.2.0:
+  version "2.2.0"
+  resolved "https://registry.yarnpkg.com/redux-thunk/-/redux-thunk-2.2.0.tgz#e615a16e16b47a19a515766133d1e3e99b7852e5"
+
 redux@^3.5.2:
   version "3.6.0"
   resolved "https://registry.yarnpkg.com/redux/-/redux-3.6.0.tgz#887c2b3d0b9bd86eca2be70571c27654c19e188d"
@@ -2989,14 +2985,6 @@ regenerator-runtime@^0.10.0:
 regenerator-runtime@^0.9.5:
   version "0.9.6"
   resolved "https://registry.yarnpkg.com/regenerator-runtime/-/regenerator-runtime-0.9.6.tgz#d33eb95d0d2001a4be39659707c51b0cb71ce029"
-
-regenerator-transform@0.9.8:
-  version "0.9.8"
-  resolved "https://registry.yarnpkg.com/regenerator-transform/-/regenerator-transform-0.9.8.tgz#0f88bb2bc03932ddb7b6b7312e68078f01026d6c"
-  dependencies:
-    babel-runtime "^6.18.0"
-    babel-types "^6.19.0"
-    private "^0.1.6"
 
 regex-cache@^0.4.2:
   version "0.4.3"

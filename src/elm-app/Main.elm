@@ -5,7 +5,6 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Html.Keyed as Keyed
-import Html.Lazy exposing (lazy, lazy2)
 import Json.Decode as Decode
 import Task
 import RemoteData exposing (..)
@@ -33,8 +32,7 @@ main =
 type alias Model =
     { entries : List Entry
     , field : String
-    , uid : Int
-    , visibility : String
+    , visibility : Visibility
     , todos : RemoteData.WebData (List Todo)
     }
 
@@ -45,12 +43,17 @@ type alias Entry =
     }
 
 
+type Visibility
+    = All
+    | Active
+    | Completed
+
+
 emptyModel : Model
 emptyModel =
     { entries = []
-    , visibility = "All"
+    , visibility = All
     , field = ""
-    , uid = 0
     , todos = RemoteData.NotAsked
     }
 
@@ -88,7 +91,7 @@ type Msg
     | TodosResponse (WebData (List Todo))
     | SaveTodoResponse (Result Http.Error Todo)
     | DeleteTodoResponse (Result Http.Error ())
-    | ChangeVisibility String
+    | ChangeVisibility Visibility
 
 
 type alias Todo =
@@ -218,7 +221,12 @@ update msg model =
             ( model, Cmd.none )
 
         Add ->
-            ( { model | field = "" }, createTodo model.field )
+            case String.trim model.field of
+                "" ->
+                    ( model, Cmd.none )
+
+                _ ->
+                    ( { model | field = "" }, createTodo model.field )
 
         UpdateField str ->
             ( { model | field = str }, Cmd.none )
@@ -274,9 +282,9 @@ view model =
         ]
         [ section
             [ class "todoapp" ]
-            [ lazy viewInput model.field
-            , lazy2 viewEntries model.visibility model.entries
-            , lazy2 viewControls model.visibility model.entries
+            [ viewInput model.field
+            , viewEntries model.visibility model.entries
+            , viewControls model.visibility model.entries
             ]
         , infoFooter
         ]
@@ -316,19 +324,22 @@ onEnter msg =
 -- VIEW ALL ENTRIES
 
 
-viewEntries : String -> List Entry -> Html Msg
+viewEntries : Visibility -> List Entry -> Html Msg
 viewEntries visibility entries =
     let
         isVisible entry =
             case visibility of
-                "Completed" ->
+                Completed ->
                     entry.todo.completed
 
-                "Active" ->
+                Active ->
                     not entry.todo.completed
 
                 _ ->
                     True
+
+        visibleEntries =
+            (List.filter isVisible entries)
 
         allCompleted =
             List.all (.completed << .todo) entries
@@ -338,6 +349,9 @@ viewEntries visibility entries =
                 "hidden"
             else
                 "visible"
+
+        keyedEntry entry =
+            ( toString entry.todo.todoId, viewEntry entry )
     in
         section
             [ class "main"
@@ -355,17 +369,12 @@ viewEntries visibility entries =
                 [ for "toggle-all" ]
                 [ text "Mark all as complete" ]
             , Keyed.ul [ class "todo-list" ] <|
-                List.map viewKeyedEntry (List.filter isVisible entries)
+                List.map keyedEntry visibleEntries
             ]
 
 
 
 -- VIEW INDIVIDUAL ENTRIES
-
-
-viewKeyedEntry : Entry -> ( String, Html Msg )
-viewKeyedEntry todo =
-    ( toString todo.todo.todoId, lazy viewEntry todo )
 
 
 viewEntry : Entry -> Html Msg
@@ -407,7 +416,7 @@ viewEntry entry =
 -- VIEW CONTROLS AND FOOTER
 
 
-viewControls : String -> List Entry -> Html Msg
+viewControls : Visibility -> List Entry -> Html Msg
 viewControls visibility entries =
     let
         entriesCompleted =
@@ -420,9 +429,9 @@ viewControls visibility entries =
             [ class "footer"
             , hidden (List.isEmpty entries)
             ]
-            [ lazy viewControlsCount entriesLeft
-            , lazy viewControlsFilters visibility
-            , lazy viewControlsClear entriesCompleted
+            [ viewControlsCount entriesLeft
+            , viewControlsFilters visibility
+            , viewControlsClear entriesCompleted
             ]
 
 
@@ -447,25 +456,24 @@ viewControlsCount entriesLeft =
             ]
 
 
-viewControlsFilters : String -> Html Msg
+viewControlsFilters : Visibility -> Html Msg
 viewControlsFilters visibility =
-    ul
-        [ class "filters" ]
-        [ visibilitySwap "#/" "All" visibility
-        , text " "
-        , visibilitySwap "#/active" "Active" visibility
-        , text " "
-        , visibilitySwap "#/completed" "Completed" visibility
-        ]
-
-
-visibilitySwap : String -> String -> String -> Html Msg
-visibilitySwap uri visibility actualVisibility =
-    li
-        [ onClick (ChangeVisibility visibility) ]
-        [ a [ href uri, classList [ ( "selected", visibility == actualVisibility ) ] ]
-            [ text visibility ]
-        ]
+    let
+        visibilitySwap uri visibility actualVisibility =
+            li
+                [ onClick (ChangeVisibility visibility) ]
+                [ a [ href uri, classList [ ( "selected", visibility == actualVisibility ) ] ]
+                    [ text (toString visibility) ]
+                ]
+    in
+        ul
+            [ class "filters" ]
+            [ visibilitySwap "#/" All visibility
+            , text " "
+            , visibilitySwap "#/active" Active visibility
+            , text " "
+            , visibilitySwap "#/completed" Completed visibility
+            ]
 
 
 viewControlsClear : Int -> Html Msg

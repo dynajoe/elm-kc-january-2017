@@ -338,7 +338,7 @@ viewEntries visibility entries =
                 Active ->
                     not entry.todo.completed
 
-                _ ->
+                All ->
                     True
 
         visibleEntries =

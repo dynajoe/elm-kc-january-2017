@@ -45,6 +45,7 @@ type Visibility
     = All
     | Active
     | Completed
+    | LongTasks
 
 
 type alias Todo =
@@ -339,6 +340,9 @@ viewEntries visibility entries =
                 Active ->
                     not entry.todo.completed
 
+                LongTasks ->
+                    String.length entry.todo.todoText > 20
+
                 All ->
                     True
 
@@ -477,6 +481,8 @@ viewControlsFilters visibility =
             , visibilitySwap "#/active" Active visibility
             , text " "
             , visibilitySwap "#/completed" Completed visibility
+            , text " "
+            , visibilitySwap "#/long" LongTasks visibility
             ]
 
 

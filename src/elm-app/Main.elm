@@ -90,7 +90,7 @@ type Msg
     | CheckAll Bool
     | TodosResponse (WebData (List Todo))
     | SaveTodoResponse (Result Http.Error Todo)
-    | DeleteTodoResponse (Result Http.Error ())
+    | DeleteTodoResponse Int (Result Http.Error ())
     | ChangeVisibility Visibility
 
 
@@ -126,7 +126,7 @@ getTodoList =
 
 deleteTodo : Todo -> Cmd Msg
 deleteTodo todo =
-    Http.send DeleteTodoResponse <|
+    Http.send (DeleteTodoResponse todo.todoId) <|
         Http.request
             { method = "DELETE"
             , headers = []
@@ -214,11 +214,13 @@ update msg model =
                 Result.Err error ->
                     Debug.crash (toString error)
 
-        DeleteTodoResponse response ->
-            ( model, Cmd.none )
+        DeleteTodoResponse todoId response ->
+            case response of
+                Ok _ ->
+                    ( { model | entries = List.filter ((/=) todoId << .todoId << .todo) model.entries }, Cmd.none )
 
-        NoOp ->
-            ( model, Cmd.none )
+                _ ->
+                    ( model, Cmd.none )
 
         Add ->
             case String.trim model.field of
@@ -239,10 +241,11 @@ update msg model =
                     else
                         entry
 
-                focus =
-                    Dom.focus ("todo-" ++ toString id)
+                focusCmd =
+                    Task.attempt (\_ -> NoOp) <|
+                        Dom.focus ("todo-" ++ toString id)
             in
-                ( { model | entries = List.map updateEntry model.entries }, Task.attempt (\_ -> NoOp) focus )
+                ( { model | entries = List.map updateEntry model.entries }, focusCmd )
 
         UpdateEntry todo newText ->
             ( model, updateTodo { todo | todoText = newText } )
@@ -251,7 +254,11 @@ update msg model =
             ( { model | entries = List.filter (\t -> t.todo.todoId /= todo.todoId) model.entries }, deleteTodo todo )
 
         DeleteComplete ->
-            ( { model | entries = List.filter (not << .completed << .todo) model.entries }, Cmd.none )
+            ( model
+            , Cmd.batch <|
+                List.map (deleteTodo << .todo) <|
+                    List.filter (.completed << .todo) model.entries
+            )
 
         Check todo isCompleted ->
             ( model, updateTodo { todo | completed = isCompleted } )
@@ -268,6 +275,9 @@ update msg model =
 
         ChangeVisibility visibility ->
             ( { model | visibility = visibility }, Cmd.none )
+
+        NoOp ->
+            ( model, Cmd.none )
 
 
 

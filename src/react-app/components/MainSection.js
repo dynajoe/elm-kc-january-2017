@@ -1,12 +1,13 @@
 import React, { Component, PropTypes } from 'react'
 import TodoItem from './TodoItem'
 import Footer from './Footer'
-import { SHOW_ALL, SHOW_COMPLETED, SHOW_ACTIVE } from '../constants/TodoFilters'
+import { SHOW_ALL, SHOW_COMPLETED, SHOW_ACTIVE, SHOW_LONG_TASKS } from '../constants/TodoFilters'
 
 const TODO_FILTERS = {
   [SHOW_ALL]: () => true,
   [SHOW_ACTIVE]: todo => !todo.completed,
-  [SHOW_COMPLETED]: todo => todo.completed
+  [SHOW_COMPLETED]: todo => todo.completed,
+  [SHOW_LONG_TASKS]: todo => (todo.text || '').length > 20
 }
 
 export default class MainSection extends Component {
@@ -15,6 +16,8 @@ export default class MainSection extends Component {
     actions: PropTypes.object.isRequired
   }
 
+  // Filter is stored in module state
+  // could have been a reducer but easy to get
   state = { filter: SHOW_ALL }
 
   handleClearCompleted = () => {

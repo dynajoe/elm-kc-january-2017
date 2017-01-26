@@ -330,6 +330,7 @@ onEnter msg =
 viewEntries : Visibility -> List Entry -> Html Msg
 viewEntries visibility entries =
     let
+        isVisible : Entry -> Bool
         isVisible entry =
             case visibility of
                 Completed ->

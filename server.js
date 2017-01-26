@@ -27,7 +27,7 @@ App.post('/todos', (req, res) => {
 
    console.log('New todo', JSON.stringify(new_todo, null, 2))
 
-   todos = todos.concat(new_todo)
+   todos = [new_todo].concat(todos)
 
    res.json(200, new_todo)
 })
@@ -58,9 +58,10 @@ App.put('/todos', (req, res) => {
    res.json(200, todos.find(t => t.todo_id === req.body.todo_id))
 })
 
-App.delete('/todos', (req, res) => {
-   console.log('Deleting todo', req.body.todo_id)
+App.delete('/todos/:todo_id', (req, res) => {
+   const todo_id = parseInt(req.params.todo_id, 10)
+   console.log('Deleting todo', todo_id)
 
-   todos = todos.filter(t => t.todo_id !== req.body.todo_id)
+   todos = todos.filter(t => t.todo_id !== todo_id)
    res.json(200, todos)
 })

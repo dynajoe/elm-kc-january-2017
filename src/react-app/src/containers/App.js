@@ -1,16 +1,22 @@
-import React, { PropTypes } from 'react'
+import React, { Component, PropTypes } from 'react'
 import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
 import Header from '../components/Header'
 import MainSection from '../components/MainSection'
 import * as TodoActions from '../actions'
 
-const App = ({todos, actions}) => (
-  <div>
-    <Header addTodo={actions.addTodo} />
-    <MainSection todos={todos} actions={actions} />
-  </div>
-)
+class App extends Component {
+   componentDidMount() {
+      this.props.actions.listTodos()
+   }
+
+   render() {
+      return (<div>
+        <Header addTodo={this.props.actions.addTodo} />
+        <MainSection todos={this.props.todos} actions={this.props.actions} />
+      </div>)
+   }
+}
 
 App.propTypes = {
   todos: PropTypes.array.isRequired,

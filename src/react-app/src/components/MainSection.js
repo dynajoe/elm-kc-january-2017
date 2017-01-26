@@ -18,7 +18,11 @@ export default class MainSection extends Component {
   state = { filter: SHOW_ALL }
 
   handleClearCompleted = () => {
-    this.props.actions.clearCompleted()
+    this.props.actions.clearCompleted(this.props.todos)
+  }
+
+  handleToggleCompleteAll = () => {
+    this.props.actions.completeAll(this.props.todos)
   }
 
   handleShow = filter => {
@@ -32,7 +36,7 @@ export default class MainSection extends Component {
         <input className="toggle-all"
                type="checkbox"
                checked={completedCount === todos.length}
-               onChange={actions.completeAll} />
+               onChange={this.handleToggleCompleteAll.bind(this)} />
       )
     }
   }
@@ -68,7 +72,7 @@ export default class MainSection extends Component {
         {this.renderToggleAll(completedCount)}
         <ul className="todo-list">
           {filteredTodos.map(todo =>
-            <TodoItem key={todo.id} todo={todo} {...actions} />
+            <TodoItem key={todo.todo_id} todo={todo} {...actions} />
           )}
         </ul>
         {this.renderFooter(completedCount)}

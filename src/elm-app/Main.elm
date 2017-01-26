@@ -13,7 +13,6 @@ import Http
 import Date exposing (Date)
 import Json.Decode.Extra as DecodeExtra exposing ((|:))
 import Json.Encode as Encode
-import List.Extra as ListExtra
 
 
 main : Program Never Model Msg
@@ -124,23 +123,16 @@ getTodoList =
 
 deleteTodo : Todo -> Cmd Msg
 deleteTodo todo =
-    let
-        body =
-            Http.jsonBody <|
-                Encode.object
-                    [ ( "todo_id", Encode.int todo.todoId )
-                    ]
-    in
-        Http.send DeleteTodoResponse <|
-            Http.request
-                { method = "DELETE"
-                , headers = []
-                , url = "/todos"
-                , body = body
-                , expect = Http.expectJson <| Decode.succeed ()
-                , timeout = Nothing
-                , withCredentials = False
-                }
+    Http.send DeleteTodoResponse <|
+        Http.request
+            { method = "DELETE"
+            , headers = []
+            , url = "/todos/" ++ (toString todo.todoId)
+            , body = Http.emptyBody
+            , expect = Http.expectJson <| Decode.succeed ()
+            , timeout = Nothing
+            , withCredentials = False
+            }
 
 
 updateTodo : Todo -> Cmd Msg
@@ -208,13 +200,13 @@ update msg model =
                         updateExisting =
                             List.map updateEntry model.entries
 
-                        appendNew =
+                        maybeNewHead =
                             if not <| List.any ((==) todo.todoId << .todoId << .todo) model.entries then
                                 [ newEntry todo ]
                             else
                                 []
                     in
-                        { model | entries = updateExisting ++ appendNew } ! []
+                        { model | entries = maybeNewHead ++ updateExisting } ! []
 
                 Result.Err error ->
                     Debug.crash (toString error)

@@ -1,50 +1,41 @@
-import { ADD_TODO, DELETE_TODO, EDIT_TODO, COMPLETE_TODO, COMPLETE_ALL, CLEAR_COMPLETED } from '../constants/ActionTypes'
+import { ADD_TODO, TODOS_FETCHED, DELETE_TODO, EDIT_TODO, COMPLETE_TODO, COMPLETE_ALL, CLEAR_COMPLETED } from '../constants/ActionTypes'
 
-const initialState = [
-  {
-    text: 'Use Redux',
-    completed: false,
-    id: 0
-  }
-]
+const initialState = []
 
 export default function todos(state = initialState, action) {
   switch (action.type) {
+    case TODOS_FETCHED:
+      return action.todos
+
     case ADD_TODO:
       return [
-        {
-          id: state.reduce((maxId, todo) => Math.max(todo.id, maxId), -1) + 1,
-          completed: false,
-          text: action.text
-        },
+        action.todo,
         ...state
       ]
 
     case DELETE_TODO:
       return state.filter(todo =>
-        todo.id !== action.id
+        // Accidentally had action.todo_id
+        todo.todo_id !== action.todo.todo_id
       )
 
     case EDIT_TODO:
       return state.map(todo =>
-        todo.id === action.id ?
-          { ...todo, text: action.text } :
+        todo.todo_id === action.todo.todo_id ?
+          action.todo :
           todo
       )
 
     case COMPLETE_TODO:
       return state.map(todo =>
-        todo.id === action.id ?
-          { ...todo, completed: !todo.completed } :
+        todo.todo_id === action.todo.todo_id ?
+          action.todo :
           todo
       )
 
     case COMPLETE_ALL:
-      const areAllMarked = state.every(todo => todo.completed)
-      return state.map(todo => ({
-        ...todo,
-        completed: !areAllMarked
-      }))
+      // const areAllMarked = state.every(todo => todo.completed)
+      return action.todos
 
     case CLEAR_COMPLETED:
       return state.filter(todo => todo.completed === false)

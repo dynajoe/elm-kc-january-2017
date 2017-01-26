@@ -155,7 +155,7 @@ createTodo text =
 
 type Msg
     = NoOp
-    | UpdateField String
+    | TodoTextInput String
     | EditingEntry Todo Bool
     | UpdateEntry Todo String
     | Add
@@ -178,7 +178,7 @@ update msg model =
                     ( { model | entries = List.map newEntry todos }, Cmd.none )
 
                 RemoteData.Failure error ->
-                    Debug.crash (toString error)
+                    Debug.crash <| "Not handling fetch response failure: " ++ (toString error)
 
                 _ ->
                     ( model, Cmd.none )
@@ -205,15 +205,15 @@ update msg model =
                         ( { model | entries = maybeNewHead ++ updateExisting }, Cmd.none )
 
                 Result.Err error ->
-                    Debug.crash (toString error)
+                    Debug.crash <| "Not handling save response failure: " ++ (toString error)
 
         DeleteTodoResponse todoId response ->
             case response of
                 Ok _ ->
                     ( { model | entries = List.filter ((/=) todoId << .todoId << .todo) model.entries }, Cmd.none )
 
-                _ ->
-                    ( model, Cmd.none )
+                Result.Err error ->
+                    Debug.crash <| "Not handling delete repsonse failure: " ++ (toString error)
 
         Add ->
             case String.trim model.field of
@@ -223,7 +223,7 @@ update msg model =
                 _ ->
                     ( { model | field = "" }, createTodo model.field )
 
-        UpdateField str ->
+        TodoTextInput str ->
             ( { model | field = str }, Cmd.none )
 
         EditingEntry todo isEditing ->
@@ -304,7 +304,7 @@ viewInput task =
             , autofocus True
             , value task
             , name "newTodo"
-            , onInput UpdateField
+            , onInput TodoTextInput
             , onEnter Add
             ]
             []

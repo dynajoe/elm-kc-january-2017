@@ -33,7 +33,6 @@ type alias Model =
     { entries : List Entry
     , field : String
     , visibility : Visibility
-    , todos : RemoteData.WebData (List Todo)
     }
 
 
@@ -54,7 +53,6 @@ emptyModel =
     { entries = []
     , visibility = All
     , field = ""
-    , todos = RemoteData.NotAsked
     }
 
 

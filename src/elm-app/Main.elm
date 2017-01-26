@@ -7,12 +7,13 @@ import Html.Events exposing (..)
 import Html.Keyed as Keyed
 import Html.Lazy exposing (lazy, lazy2)
 import Json.Decode as Decode
-import String
 import Task
 import RemoteData exposing (..)
 import Http
 import Date exposing (Date)
 import Json.Decode.Extra as DecodeExtra exposing ((|:))
+import Json.Encode as Encode
+import List.Extra as ListExtra
 
 
 main : Program Never Model Msg
@@ -40,10 +41,8 @@ type alias Model =
 
 
 type alias Entry =
-    { description : String
-    , completed : Bool
+    { todo : Todo
     , editing : Bool
-    , id : Int
     }
 
 
@@ -57,12 +56,10 @@ emptyModel =
     }
 
 
-newEntry : String -> Int -> Entry
-newEntry desc id =
-    { description = desc
-    , completed = False
+newEntry : Todo -> Entry
+newEntry todo =
+    { todo = todo
     , editing = False
-    , id = id
     }
 
 
@@ -82,30 +79,40 @@ to them.
 type Msg
     = NoOp
     | UpdateField String
-    | EditingEntry Int Bool
-    | UpdateEntry Int String
+    | EditingEntry Todo Bool
+    | UpdateEntry Todo String
     | Add
-    | Delete Int
+    | Delete Todo
     | DeleteComplete
-    | Check Int Bool
+    | Check Todo Bool
     | CheckAll Bool
     | TodosResponse (WebData (List Todo))
+    | SaveTodoResponse (Result Http.Error Todo)
+    | DeleteTodoResponse (Result Http.Error ())
     | ChangeVisibility String
 
 
 type alias Todo =
-    { todoText : String
+    { todoId : Int
+    , todoText : String
+    , completed : Bool
     , createdOn : Date
     }
 
 
+decodeTodo : Decode.Decoder Todo
+decodeTodo =
+    Decode.succeed
+        Todo
+        |: (Decode.field "todo_id" Decode.int)
+        |: (Decode.field "text" Decode.string)
+        |: (Decode.field "completed" Decode.bool)
+        |: (Decode.field "created_on" DecodeExtra.date)
+
+
 decodeTodos : Decode.Decoder (List Todo)
 decodeTodos =
-    Decode.list <|
-        Decode.succeed
-            Todo
-            |: (Decode.field "text" Decode.string)
-            |: (Decode.field "created_on" DecodeExtra.date)
+    Decode.list decodeTodo
 
 
 getTodoList : Cmd Msg
@@ -113,6 +120,61 @@ getTodoList =
     Http.get "/todos" decodeTodos
         |> RemoteData.sendRequest
         |> Cmd.map TodosResponse
+
+
+deleteTodo : Todo -> Cmd Msg
+deleteTodo todo =
+    let
+        body =
+            Http.jsonBody <|
+                Encode.object
+                    [ ( "todo_id", Encode.int todo.todoId )
+                    ]
+    in
+        Http.send DeleteTodoResponse <|
+            Http.request
+                { method = "DELETE"
+                , headers = []
+                , url = "/todos"
+                , body = body
+                , expect = Http.expectJson <| Decode.succeed ()
+                , timeout = Nothing
+                , withCredentials = False
+                }
+
+
+updateTodo : Todo -> Cmd Msg
+updateTodo todo =
+    let
+        body =
+            Http.jsonBody <|
+                Encode.object
+                    [ ( "todo_id", Encode.int todo.todoId )
+                    , ( "text", Encode.string todo.todoText )
+                    , ( "completed", Encode.bool todo.completed )
+                    ]
+    in
+        Http.send SaveTodoResponse <|
+            Http.request
+                { method = "PUT"
+                , headers = []
+                , url = "/todos"
+                , body = body
+                , expect = Http.expectJson decodeTodo
+                , timeout = Nothing
+                , withCredentials = False
+                }
+
+
+createTodo : String -> Cmd Msg
+createTodo text =
+    let
+        body =
+            Http.jsonBody <|
+                Encode.object [ ( "text", Encode.string text ) ]
+    in
+        Http.send SaveTodoResponse <|
+            Http.post "/todos" body decodeTodo
 
 
 
@@ -123,34 +185,59 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         TodosResponse response ->
+            case response of
+                RemoteData.Success todos ->
+                    { model | entries = List.map newEntry todos } ! []
+
+                RemoteData.Failure error ->
+                    Debug.crash (toString error)
+
+                _ ->
+                    model ! []
+
+        SaveTodoResponse response ->
+            case response of
+                Ok todo ->
+                    let
+                        updateEntry entry =
+                            if todo.todoId == entry.todo.todoId then
+                                { entry | todo = todo }
+                            else
+                                entry
+
+                        updateExisting =
+                            List.map updateEntry model.entries
+
+                        appendNew =
+                            if not <| List.any ((==) todo.todoId << .todoId << .todo) model.entries then
+                                [ newEntry todo ]
+                            else
+                                []
+                    in
+                        { model | entries = updateExisting ++ appendNew } ! []
+
+                Result.Err error ->
+                    Debug.crash (toString error)
+
+        DeleteTodoResponse response ->
             model ! []
 
         NoOp ->
             model ! []
 
         Add ->
-            { model
-                | uid = model.uid + 1
-                , field = ""
-                , entries =
-                    if String.isEmpty model.field then
-                        model.entries
-                    else
-                        model.entries ++ [ newEntry model.field model.uid ]
-            }
-                ! []
+            { model | field = "" } ! [ createTodo model.field ]
 
         UpdateField str ->
-            { model | field = str }
-                ! []
+            { model | field = str } ! []
 
-        EditingEntry id isEditing ->
+        EditingEntry todo isEditing ->
             let
-                updateEntry t =
-                    if t.id == id then
-                        { t | editing = isEditing }
+                updateEntry entry =
+                    if todo.todoId == entry.todo.todoId then
+                        { entry | editing = isEditing }
                     else
-                        t
+                        entry
 
                 focus =
                     Dom.focus ("todo-" ++ toString id)
@@ -158,43 +245,25 @@ update msg model =
                 { model | entries = List.map updateEntry model.entries }
                     ! [ Task.attempt (\_ -> NoOp) focus ]
 
-        UpdateEntry id task ->
-            let
-                updateEntry t =
-                    if t.id == id then
-                        { t | description = task }
-                    else
-                        t
-            in
-                { model | entries = List.map updateEntry model.entries }
-                    ! []
+        UpdateEntry todo newText ->
+            model ! [ updateTodo { todo | todoText = newText } ]
 
-        Delete id ->
-            { model | entries = List.filter (\t -> t.id /= id) model.entries }
-                ! []
+        Delete todo ->
+            { model | entries = List.filter (\t -> t.todo.todoId /= todo.todoId) model.entries } ! [ deleteTodo todo ]
 
         DeleteComplete ->
-            { model | entries = List.filter (not << .completed) model.entries }
+            { model | entries = List.filter (not << .completed << .todo) model.entries }
                 ! []
 
-        Check id isCompleted ->
-            let
-                updateEntry t =
-                    if t.id == id then
-                        { t | completed = isCompleted }
-                    else
-                        t
-            in
-                { model | entries = List.map updateEntry model.entries }
-                    ! []
+        Check todo isCompleted ->
+            model ! [ updateTodo { todo | completed = isCompleted } ]
 
         CheckAll isCompleted ->
             let
                 updateEntry t =
-                    { t | completed = isCompleted }
+                    updateTodo { t | completed = isCompleted }
             in
-                { model | entries = List.map updateEntry model.entries }
-                    ! []
+                model ! List.map (updateEntry << .todo) model.entries
 
         ChangeVisibility visibility ->
             { model | visibility = visibility }
@@ -258,19 +327,19 @@ onEnter msg =
 viewEntries : String -> List Entry -> Html Msg
 viewEntries visibility entries =
     let
-        isVisible todo =
+        isVisible entry =
             case visibility of
                 "Completed" ->
-                    todo.completed
+                    entry.todo.completed
 
                 "Active" ->
-                    not todo.completed
+                    not entry.todo.completed
 
                 _ ->
                     True
 
         allCompleted =
-            List.all .completed entries
+            List.all (.completed << .todo) entries
 
         cssVisibility =
             if List.isEmpty entries then
@@ -304,39 +373,39 @@ viewEntries visibility entries =
 
 viewKeyedEntry : Entry -> ( String, Html Msg )
 viewKeyedEntry todo =
-    ( toString todo.id, lazy viewEntry todo )
+    ( toString todo.todo.todoId, lazy viewEntry todo )
 
 
 viewEntry : Entry -> Html Msg
-viewEntry todo =
+viewEntry entry =
     li
-        [ classList [ ( "completed", todo.completed ), ( "editing", todo.editing ) ] ]
+        [ classList [ ( "completed", entry.todo.completed ), ( "editing", entry.editing ) ] ]
         [ div
             [ class "view" ]
             [ input
                 [ class "toggle"
                 , type_ "checkbox"
-                , checked todo.completed
-                , onClick (Check todo.id (not todo.completed))
+                , checked entry.todo.completed
+                , onClick (Check entry.todo (not entry.todo.completed))
                 ]
                 []
             , label
-                [ onDoubleClick (EditingEntry todo.id True) ]
-                [ text todo.description ]
+                [ onDoubleClick (EditingEntry entry.todo True) ]
+                [ text entry.todo.todoText ]
             , button
                 [ class "destroy"
-                , onClick (Delete todo.id)
+                , onClick (Delete entry.todo)
                 ]
                 []
             ]
         , input
             [ class "edit"
-            , value todo.description
+            , value entry.todo.todoText
             , name "title"
-            , id ("todo-" ++ toString todo.id)
-            , onInput (UpdateEntry todo.id)
-            , onBlur (EditingEntry todo.id False)
-            , onEnter (EditingEntry todo.id False)
+            , id ("todo-" ++ toString entry.todo.todoId)
+            , onInput (UpdateEntry entry.todo)
+            , onBlur (EditingEntry entry.todo False)
+            , onEnter (EditingEntry entry.todo False)
             ]
             []
         ]
@@ -350,7 +419,7 @@ viewControls : String -> List Entry -> Html Msg
 viewControls visibility entries =
     let
         entriesCompleted =
-            List.length (List.filter .completed entries)
+            List.length (List.filter (.completed << .todo) entries)
 
         entriesLeft =
             List.length entries - entriesCompleted

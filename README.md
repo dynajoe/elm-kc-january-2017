@@ -8,9 +8,9 @@ These projects are wired up with hot module reloading using Webpack and Express 
 
 Browse to:
 
-  http://localhost:4000/elm.html
+For Elm App - http://localhost:4000/elm.html
   
-  http://localhost:4000/react.html
+For React+Redux App - http://localhost:4000/react.html
 
 To see how you might add a feature check out these branches:
 
@@ -18,6 +18,10 @@ To see how you might add a feature check out these branches:
 `redux-long-tasks`
 
 These TodoMVC implementations were borrowed from others and modified to include interacting with a HTTP API.
+
+Elm - (https://github.com/evancz/elm-todomvc)
+
+React + Redux - (https://github.com/reactjs/redux/tree/master/examples/todomvc)
 
 #Approach to web
 ##Virtual Dom

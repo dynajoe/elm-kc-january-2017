@@ -8,8 +8,9 @@ These projects are wired up with hot module reloading using Webpack and Express 
 
 Browse to:
 
-http://localhost:4000/elm.html
-http://localhost:4000/react.html
+  http://localhost:4000/elm.html
+  
+  http://localhost:4000/react.html
 
 To see how you might add a feature check out these branches:
 
